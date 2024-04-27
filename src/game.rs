@@ -12,7 +12,6 @@ use embedded_graphics::{
 };
 use esp_hal::gpio::{GpioPin, Input, PullDown};
 use esp_hal::prelude::_embedded_hal_digital_v2_InputPin;
-use esp_println::println;
 use fastrand::Rng;
 use ssd1306::mode::DisplayConfig;
 const SNAKE_STYLE: PrimitiveStyle<BinaryColor> = PrimitiveStyleBuilder::new()
@@ -31,33 +30,40 @@ const TEXT_STYLE: MonoTextStyle<'static, BinaryColor> = MonoTextStyleBuilder::ne
     .text_color(BinaryColor::On)
     .build();
 
-pub struct Board {
-    pub width: u32,
-    pub height: u32,
+struct Board {
+    width: u32,
+    height: u32,
 }
 
-pub struct Food {
-    pub x: i32,
-    pub y: i32,
-    pub size: u32,
+struct Food {
+    x: i32,
+    y: i32,
+    size: u32,
 }
+
+impl Default for Food {
+    fn default() -> Self {
+        Self {
+            x: 24,
+            y: 8,
+            size: 4,
+        }
+    }
+}
+
 pub struct Game {
-    pub board: Board,
-    pub snake: Snake,
-    pub display: DisplayController,
-    pub game_over: bool,
-    pub food_exists: bool,
-    pub food: Food,
+    board: Board,
+    snake: Snake,
+    display: DisplayController,
+    game_over: bool,
+    food_exists: bool,
+    food: Food,
 }
 
 impl Game {
     pub fn new(width: u32, height: u32, display: DisplayController) -> Self {
         Self {
-            food: Food {
-                x: 24,
-                y: 8,
-                size: 4,
-            },
+            food: Food::default(),
             food_exists: true,
             game_over: false,
             board: Board { width, height },
@@ -71,14 +77,6 @@ impl Game {
 
         display.init().unwrap();
 
-        Rectangle::new(
-            Point::new(0, 0),
-            Size::new(self.board.width, self.board.height),
-        )
-        .into_styled(BOARD_STYLE)
-        .draw(&mut *display)
-        .unwrap();
-
         if self.game_over {
             Text::with_baseline("Game Over", Point::new(32, 32), TEXT_STYLE, Baseline::Top)
                 .draw(&mut *display)
@@ -86,6 +84,14 @@ impl Game {
             display.flush().unwrap();
             return;
         }
+
+        Rectangle::new(
+            Point::new(0, 0),
+            Size::new(self.board.width, self.board.height),
+        )
+        .into_styled(BOARD_STYLE)
+        .draw(&mut *display)
+        .unwrap();
 
         for block in &self.snake.body {
             Rectangle::new(
@@ -100,7 +106,7 @@ impl Game {
         if self.food_exists {
             Rectangle::new(
                 Point::new(self.food.x as i32, self.food.y as i32),
-                Size::new(3, 3),
+                Size::new(self.food.size, self.food.size),
             )
             .into_styled(SNAKE_STYLE)
             .draw(&mut *display)
@@ -132,14 +138,13 @@ impl Game {
     }
 
     fn add_food(&mut self, mut rng: Rng) {
-        let mut new_x = rng.usize(1..self.board.width as usize - 1) / 4 * 4;
-        let mut new_y = rng.usize(1..self.board.height as usize - 1) / 4 * 4;
+        let mut new_x = (rng.usize(1..self.board.width as usize - 2)).next_multiple_of(4);
+        let mut new_y = (rng.usize(1..self.board.height as usize - 2)).next_multiple_of(4);
 
         while self.snake.overlap_tail(new_x as i32, new_y as i32) {
-            new_x = rng.usize(1..self.board.width as usize - 1) / 4 * 4;
-            new_y = rng.usize(1..self.board.height as usize - 1) / 4 * 4;
+            new_x = (rng.usize(1..self.board.width as usize - 2)).next_multiple_of(4);
+            new_y = (rng.usize(1..self.board.height as usize - 2)).next_multiple_of(4);
         }
-
         self.food.x = new_x as i32;
         self.food.y = new_y as i32;
         self.food_exists = true;
@@ -147,8 +152,6 @@ impl Game {
 
     fn check_eating(&mut self) {
         let (head_x, head_y) = self.snake.head_position();
-        println!("{} {}", head_x, head_y);
-        println!("{} {}", self.food.x, self.food.y);
         if head_x == self.food.x && head_y == self.food.y {
             self.food_exists = false;
             self.snake.restore_tail();
@@ -175,6 +178,9 @@ impl Game {
         right_button: Arc<GpioPin<Input<PullDown>, 32>>,
     ) {
         if self.game_over {
+            if up_button.is_high().unwrap() || down_button.is_high().unwrap() {
+                self.restart();
+            }
             return;
         }
 
@@ -196,14 +202,10 @@ impl Game {
         self.snake.change_direction(Some(direction));
     }
 
-    pub fn restart(&mut self) {
-        self.snake = Snake::new(2, 2);
+    fn restart(&mut self) {
+        self.snake = Snake::new(8, 8);
         self.food_exists = true;
         self.game_over = false;
-        self.food = Food {
-            x: 24,
-            y: 8,
-            size: 4,
-        }
+        self.food = Food::default()
     }
 }

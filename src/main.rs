@@ -17,7 +17,7 @@ use esp_hal::{
     prelude::_fugit_RateExtU32,
     system::SystemExt,
     timer::TimerGroup,
-    IO,
+    Rng, IO,
 };
 
 mod game;
@@ -31,8 +31,6 @@ use ssd1306::{
 extern crate alloc;
 use core::mem::MaybeUninit;
 
-// mod render;
-// use render::DisplayController;
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
@@ -58,13 +56,16 @@ pub type DisplayController = Arc<
 
 #[main]
 async fn main(_spawner: Spawner) -> ! {
-    let peripherals = Peripherals::take();
-    let system = peripherals.SYSTEM.split();
-
-    let clocks = ClockControl::max(system.clock_control).freeze();
     init_heap();
 
+    let peripherals = Peripherals::take();
+    let system = peripherals.SYSTEM.split();
+    let clocks = ClockControl::max(system.clock_control).freeze();
+
+    esp_println::logger::init_logger_from_env();
+
     let timg0 = TimerGroup::new(peripherals.TIMG0, &clocks);
+
     embassy::init(&clocks, timg0);
 
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
@@ -73,11 +74,11 @@ async fn main(_spawner: Spawner) -> ! {
         peripherals.I2C0,
         io.pins.gpio21,
         io.pins.gpio22,
-        100.kHz(),
+        400.kHz(),
         &clocks,
     );
 
-    let rng = peripherals.RNG;
+    let mut rng = Rng::new(peripherals.RNG);
 
     let interface = I2CDisplayInterface::new(i2c);
 
@@ -86,8 +87,6 @@ async fn main(_spawner: Spawner) -> ! {
             .into_buffered_graphics_mode(),
     ));
 
-    esp_println::logger::init_logger_from_env();
-    //Update function
     let up_button = Arc::new(io.pins.gpio14.into_pull_down_input());
     let down_button = Arc::new(io.pins.gpio12.into_pull_down_input());
 
@@ -97,7 +96,7 @@ async fn main(_spawner: Spawner) -> ! {
     let mut game = Game::new(128, 64, display);
 
     loop {
-        let fastrng = fastrand::Rng::with_seed(rng.data().read().bits() as u64);
+        let fastrng = fastrand::Rng::with_seed(rng.random() as u64);
 
         game.handle_input(
             Arc::clone(&up_button),
@@ -108,6 +107,6 @@ async fn main(_spawner: Spawner) -> ! {
         game.update(fastrng);
         game.draw().await;
 
-        Timer::after(Duration::from_millis(70)).await;
+        Timer::after(Duration::from_millis(100)).await;
     }
 }
