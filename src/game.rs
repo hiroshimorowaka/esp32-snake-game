@@ -163,8 +163,8 @@ impl Game {
 
         let result = next_x > 0
             && next_y > 0
-            && next_x < self.board.width as i32 - 1
-            && next_y < self.board.height as i32 - 1;
+            && next_x < self.board.width as i32 - 4
+            && next_y < self.board.height as i32 - 4;
         return result;
     }
     pub fn handle_input(
