@@ -85,6 +85,7 @@ impl Game {
             return;
         }
 
+        // Draw board walls
         Rectangle::new(
             Point::new(0, 0),
             Size::new(self.board.width, self.board.height),
@@ -93,6 +94,7 @@ impl Game {
         .draw(&mut *display)
         .unwrap();
 
+        //Draw snake
         for block in &self.snake.body {
             Rectangle::new(
                 Point::new(block.x as i32, block.y as i32),
@@ -103,6 +105,7 @@ impl Game {
             .unwrap();
         }
 
+        //Draw food
         if self.food_exists {
             Rectangle::new(
                 Point::new(self.food.x as i32, self.food.y as i32),
