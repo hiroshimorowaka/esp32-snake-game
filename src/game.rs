@@ -31,6 +31,9 @@ const TEXT_STYLE: MonoTextStyle<'static, BinaryColor> = MonoTextStyleBuilder::ne
     .text_color(BinaryColor::On)
     .build();
 
+const SNAKE_DEFAULT_X: i32 = 24;
+const SNAKE_DEFAULT_Y: i32 = 20;
+
 struct Board {
     width: u32,
     height: u32,
@@ -45,8 +48,8 @@ struct Food {
 impl Default for Food {
     fn default() -> Self {
         Self {
-            x: 24,
-            y: 8,
+            x: 32,
+            y: 16,
             size: 4,
         }
     }
@@ -70,7 +73,7 @@ impl Game {
             food_exists: true,
             game_over: false,
             board: Board { width, height },
-            snake: Snake::new(8, 8),
+            snake: Snake::new(SNAKE_DEFAULT_X, SNAKE_DEFAULT_Y),
             display,
         }
     }
@@ -226,7 +229,7 @@ impl Game {
     }
 
     fn restart(&mut self) {
-        self.snake = Snake::new(8, 8);
+        self.snake = Snake::new(SNAKE_DEFAULT_X, SNAKE_DEFAULT_Y);
         self.food_exists = true;
         self.game_over = false;
         self.food = Food::default();
