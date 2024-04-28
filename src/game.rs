@@ -1,4 +1,4 @@
-use crate::snake::{Direction, Snake};
+use crate::snake::{Direction, Snake, SNAKE_AND_FOOD_SIZE};
 use crate::DisplayController;
 use alloc::format;
 use alloc::sync::Arc;
@@ -98,8 +98,8 @@ impl Game {
 
         // Draw board walls
         Rectangle::new(
-            Point::new(0, 0),
-            Size::new(self.board.width, self.board.height),
+            Point::new(2, 2),
+            Size::new(self.board.width - 4, self.board.height - 4),
         )
         .into_styled(BOARD_STYLE)
         .draw(&mut *display)
@@ -152,12 +152,20 @@ impl Game {
     }
 
     fn add_food(&mut self, mut rng: Rng) {
-        let mut new_x = (rng.usize(1..self.board.width as usize - 4)).next_multiple_of(4);
-        let mut new_y = (rng.usize(1..self.board.height as usize - 4)).next_multiple_of(4);
+        let mut new_x = (rng.usize(1..self.board.width as usize))
+            .next_multiple_of(SNAKE_AND_FOOD_SIZE as usize)
+            .clamp(SNAKE_AND_FOOD_SIZE as usize, 120);
+        let mut new_y = (rng.usize(1..self.board.height as usize))
+            .next_multiple_of(SNAKE_AND_FOOD_SIZE as usize)
+            .clamp(SNAKE_AND_FOOD_SIZE as usize, 56);
 
         while self.snake.overlap_tail(new_x as i32, new_y as i32) {
-            new_x = (rng.usize(1..self.board.width as usize - 4)).next_multiple_of(4);
-            new_y = (rng.usize(1..self.board.height as usize - 4)).next_multiple_of(4);
+            new_x = (rng.usize(1..self.board.width as usize))
+                .next_multiple_of(SNAKE_AND_FOOD_SIZE as usize)
+                .clamp(SNAKE_AND_FOOD_SIZE as usize, 120);
+            new_y = (rng.usize(1..self.board.height as usize))
+                .next_multiple_of(SNAKE_AND_FOOD_SIZE as usize)
+                .clamp(SNAKE_AND_FOOD_SIZE as usize, 56);
         }
         self.food.x = new_x as i32;
         self.food.y = new_y as i32;
@@ -181,8 +189,8 @@ impl Game {
 
         let result = next_x > 0
             && next_y > 0
-            && next_x < self.board.width as i32 - 4
-            && next_y < self.board.height as i32 - 4;
+            && next_x < self.board.width as i32 - SNAKE_AND_FOOD_SIZE as i32
+            && next_y < self.board.height as i32 - SNAKE_AND_FOOD_SIZE as i32;
         return result;
     }
     pub fn handle_input(
@@ -221,6 +229,7 @@ impl Game {
         self.snake = Snake::new(8, 8);
         self.food_exists = true;
         self.game_over = false;
-        self.food = Food::default()
+        self.food = Food::default();
+        self.score = 0;
     }
 }

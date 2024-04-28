@@ -25,7 +25,7 @@ pub struct Block {
     pub size: u32,
 }
 
-const SNAKE_BLOCK_SIZE: u32 = 4;
+pub const SNAKE_AND_FOOD_SIZE: u32 = 4;
 
 pub struct Snake {
     pub direction: Direction,
@@ -38,14 +38,14 @@ impl Snake {
         let mut body: LinkedList<Block> = LinkedList::new();
 
         body.push_back(Block {
-            x: x + SNAKE_BLOCK_SIZE as i32 * 2,
+            x: x + SNAKE_AND_FOOD_SIZE as i32 * 2,
             y,
-            size: SNAKE_BLOCK_SIZE,
+            size: SNAKE_AND_FOOD_SIZE,
         });
         body.push_back(Block {
-            x: x + SNAKE_BLOCK_SIZE as i32,
+            x: x + SNAKE_AND_FOOD_SIZE as i32,
             y,
-            size: SNAKE_BLOCK_SIZE,
+            size: SNAKE_AND_FOOD_SIZE,
         });
 
         Snake {
@@ -77,26 +77,26 @@ impl Snake {
         let new_block = match self.direction {
             Direction::Up => Block {
                 x: last_x,
-                y: last_y - SNAKE_BLOCK_SIZE as i32,
-                size: SNAKE_BLOCK_SIZE,
+                y: last_y - SNAKE_AND_FOOD_SIZE as i32,
+                size: SNAKE_AND_FOOD_SIZE,
             },
             Direction::Down => Block {
                 x: last_x,
-                y: last_y + SNAKE_BLOCK_SIZE as i32,
+                y: last_y + SNAKE_AND_FOOD_SIZE as i32,
 
-                size: SNAKE_BLOCK_SIZE,
+                size: SNAKE_AND_FOOD_SIZE,
             },
             Direction::Left => Block {
-                x: last_x - SNAKE_BLOCK_SIZE as i32,
+                x: last_x - SNAKE_AND_FOOD_SIZE as i32,
                 y: last_y,
 
-                size: SNAKE_BLOCK_SIZE,
+                size: SNAKE_AND_FOOD_SIZE,
             },
             Direction::Right => Block {
-                x: last_x + SNAKE_BLOCK_SIZE as i32,
+                x: last_x + SNAKE_AND_FOOD_SIZE as i32,
                 y: last_y,
 
-                size: SNAKE_BLOCK_SIZE,
+                size: SNAKE_AND_FOOD_SIZE,
             },
         };
 
@@ -113,10 +113,10 @@ impl Snake {
     pub fn next_head(&self) -> (i32, i32) {
         let (head_x, head_y) = self.head_position();
         match self.direction {
-            Direction::Up => (head_x, head_y - 1),
-            Direction::Down => (head_x, head_y + 1),
-            Direction::Left => (head_x - 1, head_y),
-            Direction::Right => (head_x + 1, head_y),
+            Direction::Up => (head_x, head_y - SNAKE_AND_FOOD_SIZE as i32),
+            Direction::Down => (head_x, head_y + SNAKE_AND_FOOD_SIZE as i32),
+            Direction::Left => (head_x - SNAKE_AND_FOOD_SIZE as i32, head_y),
+            Direction::Right => (head_x + SNAKE_AND_FOOD_SIZE as i32, head_y),
         }
     }
 
@@ -131,8 +131,8 @@ impl Snake {
             if x == block.x && y == block.y {
                 return true;
             }
-            ch += 1;
 
+            ch += 1;
             if ch == self.body.len() - 1 {
                 break;
             }
