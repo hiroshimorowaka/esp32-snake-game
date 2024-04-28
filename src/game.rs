@@ -1,5 +1,6 @@
 use crate::snake::{Direction, Snake};
 use crate::DisplayController;
+use alloc::format;
 use alloc::sync::Arc;
 use embedded_graphics::mono_font::ascii::FONT_6X10;
 use embedded_graphics::mono_font::{MonoTextStyle, MonoTextStyleBuilder};
@@ -58,11 +59,13 @@ pub struct Game {
     game_over: bool,
     food_exists: bool,
     food: Food,
+    score: u32,
 }
 
 impl Game {
     pub fn new(width: u32, height: u32, display: DisplayController) -> Self {
         Self {
+            score: 0,
             food: Food::default(),
             food_exists: true,
             game_over: false,
@@ -78,9 +81,17 @@ impl Game {
         display.init().unwrap();
 
         if self.game_over {
-            Text::with_baseline("Game Over", Point::new(32, 32), TEXT_STYLE, Baseline::Top)
+            Text::with_baseline("Game Over", Point::new(36, 32), TEXT_STYLE, Baseline::Top)
                 .draw(&mut *display)
                 .unwrap();
+            Text::with_baseline(
+                format!("Score: {}", self.score).as_str(),
+                Point::new(36, 42),
+                TEXT_STYLE,
+                Baseline::Top,
+            )
+            .draw(&mut *display)
+            .unwrap();
             display.flush().unwrap();
             return;
         }
@@ -141,12 +152,12 @@ impl Game {
     }
 
     fn add_food(&mut self, mut rng: Rng) {
-        let mut new_x = (rng.usize(1..self.board.width as usize - 2)).next_multiple_of(4);
-        let mut new_y = (rng.usize(1..self.board.height as usize - 2)).next_multiple_of(4);
+        let mut new_x = (rng.usize(1..self.board.width as usize - 4)).next_multiple_of(4);
+        let mut new_y = (rng.usize(1..self.board.height as usize - 4)).next_multiple_of(4);
 
         while self.snake.overlap_tail(new_x as i32, new_y as i32) {
-            new_x = (rng.usize(1..self.board.width as usize - 2)).next_multiple_of(4);
-            new_y = (rng.usize(1..self.board.height as usize - 2)).next_multiple_of(4);
+            new_x = (rng.usize(1..self.board.width as usize - 4)).next_multiple_of(4);
+            new_y = (rng.usize(1..self.board.height as usize - 4)).next_multiple_of(4);
         }
         self.food.x = new_x as i32;
         self.food.y = new_y as i32;
@@ -158,6 +169,7 @@ impl Game {
         if head_x == self.food.x && head_y == self.food.y {
             self.food_exists = false;
             self.snake.restore_tail();
+            self.score += 4;
         }
     }
 
@@ -181,7 +193,7 @@ impl Game {
         right_button: Arc<GpioPin<Input<PullDown>, 32>>,
     ) {
         if self.game_over {
-            if up_button.is_high().unwrap() || down_button.is_high().unwrap() {
+            if up_button.is_high().unwrap() || right_button.is_high().unwrap() {
                 self.restart();
             }
             return;
