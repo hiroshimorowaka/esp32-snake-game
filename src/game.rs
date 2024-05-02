@@ -34,6 +34,7 @@ const TEXT_STYLE: MonoTextStyle<'static, BinaryColor> = MonoTextStyleBuilder::ne
 const SNAKE_DEFAULT_X: i32 = 24;
 const SNAKE_DEFAULT_Y: i32 = 20;
 
+// const MOVING_PERIOD: f64 = 0.1;
 struct Board {
     width: u32,
     height: u32,
@@ -63,12 +64,14 @@ pub struct Game {
     food_exists: bool,
     food: Food,
     score: u32,
+    waiting_time: f64,
 }
 
 impl Game {
     pub fn new(width: u32, height: u32, display: DisplayController) -> Self {
         Self {
             score: 0,
+            waiting_time: 0.0,
             food: Food::default(),
             food_exists: true,
             game_over: false,
@@ -134,6 +137,7 @@ impl Game {
     }
 
     pub fn update(&mut self, rng: Rng) {
+        self.waiting_time += 1.0 / 10.0;
         if self.game_over {
             return; // Restart game
         }
@@ -152,6 +156,7 @@ impl Game {
         } else {
             self.game_over = true;
         }
+        self.waiting_time = 0.0;
     }
 
     fn add_food(&mut self, mut rng: Rng) {
@@ -204,19 +209,19 @@ impl Game {
         right_button: Arc<GpioPin<Input<PullDown>, 32>>,
     ) {
         if self.game_over {
-            if up_button.is_high().unwrap() || right_button.is_high().unwrap() {
+            if left_button.is_high().unwrap_or(false) && right_button.is_high().unwrap_or(false) {
                 self.restart();
             }
             return;
         }
 
-        let direction = if up_button.is_high().unwrap() {
+        let direction = if up_button.is_high().unwrap_or(false) {
             Direction::Up
-        } else if down_button.is_high().unwrap() {
+        } else if down_button.is_high().unwrap_or(false) {
             Direction::Down
-        } else if left_button.is_high().unwrap() {
+        } else if left_button.is_high().unwrap_or(false) {
             Direction::Left
-        } else if right_button.is_high().unwrap() {
+        } else if right_button.is_high().unwrap_or(false) {
             Direction::Right
         } else {
             return;
