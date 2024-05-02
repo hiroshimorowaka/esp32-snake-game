@@ -84,7 +84,7 @@ Eles estão ligados da seguinte forma:
 - Terminal 2 -> P33 (Pin 33/GPIO 33)
 
 ### Diagrama
-![Diagrama](https://i.imgur.com/J0wX775.png)
+![Diagrama](https://i.imgur.com/2zq6DpT.png)
 
 Espero que não tenha ficado tão difícil de entender o diagrama.
 
