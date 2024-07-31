@@ -49,7 +49,7 @@ Pra montar a base do projeto, foi usado o [esp-template](https://github.com/esp-
 Pórem, vale ressaltar que a versão das crates `esp-hal` e `esp-wifi` não estão na versão mais atual, atualizar as crates QUEBRA compatibilidade.
 
 ### Componentes usados
-- 4 (dois) push buttons comuns.
+- 4 (quatro) push buttons comuns.
 - 1 (um) display SSD1306 (o que eu uso é LCD monocromático)
 
 Meus botões são de dois pinos, mas caso o seu botão seja de quatro pinos, que é o mais comum, usem o diagrama que eu montei ali em baixo para se localizar melhor.
